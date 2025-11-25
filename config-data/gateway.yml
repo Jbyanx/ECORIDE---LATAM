@@ -18,6 +18,12 @@ spring:
           filters:
             - StripPrefix=1 # Quita el primer segmento (/api) antes de enviar. Opcional según tu diseño.
             # Si tu TripService espera /trips, y llamas /api/trips, usa StripPrefix=1 para que llegue /trips
+        - id: passenger-service-route
+          uri: lb://passenger-service
+          predicates:
+            - Path=/api/passengers/**
+          filters:
+            - StripPrefix=1
 
   # Configuración de Seguridad (OAuth2 con Keycloak)
   security:
