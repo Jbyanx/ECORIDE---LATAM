@@ -30,4 +30,9 @@ public class TripController {
     public List<TripResponse> getAllTrips() {
         return service.getAllTrips();
     }
+
+    @GetMapping("/ping")
+    public String ping(@RequestHeader(value = "X-User-Id", defaultValue = "NO-LLEGO-NADA") String userId) {
+        return "¡Hola " + userId + "! Soy Trip Service.";
+    }
 }
