@@ -24,6 +24,12 @@ spring:
             - Path=/api/passengers/**
           filters:
             - StripPrefix=1
+        - id: payment-service-route
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=1
 
   # Configuración de Seguridad (OAuth2 con Keycloak)
   security:
