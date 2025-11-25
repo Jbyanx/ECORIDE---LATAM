@@ -1,0 +1,15 @@
+server:
+  port: 8761 # Puerto estándar de Eureka
+
+spring:
+  application:
+    name: eureka-server
+
+eureka:
+  client:
+    register-with-eureka: false # ¡CLAVE! No te registres contigo mismo
+    fetch-registry: false       # ¡CLAVE! No busques otros servidores
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  server:
+    wait-time-in-ms-when-sync-empty: 0 # Arranca rápido sin esperar sincronización

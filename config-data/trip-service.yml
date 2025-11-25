@@ -1,0 +1,41 @@
+server:
+  port: 8081 # Puerto específico para Trip Service
+
+spring:
+  datasource:
+    # CAMBIO AQUÍ: de 5432 a 5438
+    url: jdbc:postgresql://localhost:5438/trip_db
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Crea las tablas automáticamente (solo para dev)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Configuración de RabbitMQ (Para la Saga)
+  cloud:
+    function:
+      definition: reservationProcessor # Nombre de la función (Java) que procesará eventos
+    stream:
+      bindings:
+        reservationProcessor-in-0:
+          destination: eco.reservations
+          group: trip-group
+        reservationProcessor-out-0:
+          destination: eco.reservations
+      rabbit:
+        bindings:
+          reservationProcessor-in-0:
+            consumer:
+              auto-bind-dlq: true # Dead Letter Queue para errores
+
+  # Configuración de Eureka (Para que otros lo encuentren)
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true

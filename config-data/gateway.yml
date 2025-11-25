@@ -1,0 +1,41 @@
+server:
+  port: 8090 # <--- CAMBIO: Usaremos el 8090 (libre)
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # Permite encontrar servicios automáticamente por su nombre en Eureka
+          lower-case-service-id: true # Convierte TRIP-SERVICE a trip-service en la URL
+
+      # Definición explícita de rutas (Más control que la automática)
+      routes:
+        - id: trip-service-route
+          uri: lb://trip-service # 'lb' significa Load Balancer (usa Eureka)
+          predicates:
+            - Path=/api/trips/** # Si la URL empieza con /api/trips... envíala al Trip Service
+          filters:
+            - StripPrefix=1 # Quita el primer segmento (/api) antes de enviar. Opcional según tu diseño.
+            # Si tu TripService espera /trips, y llamas /api/trips, usa StripPrefix=1 para que llegue /trips
+
+  # Configuración de Seguridad (OAuth2 con Keycloak)
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/ecoride
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: eco-gateway-client
+            client-secret: 7vnNk5eMcwt1AxUJfx52sVHFknf63Um1
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+            scope: openid
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
