@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'ecoride-metrics'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8081'] # Trip Service
+        labels:
+          application: 'trip-service'
+      - targets: ['host.docker.internal:8090'] # <--- CAMBIO AQUÍ (Antes era 8080 o 9090) GATEWAY
+        labels:
+          application: 'gateway'

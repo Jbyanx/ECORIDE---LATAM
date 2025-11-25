@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # --- Identity (Keycloak) ---
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    container_name: eco-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev
+    ports:
+      - "8080:8080"
+    # volumes:
+    #   - ./keycloak-data:/opt/keycloak/data/h2
+    networks:
+      - eco-network
+
+  # --- Broker (RabbitMQ) ---
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: eco-rabbitmq
+    ports:
+      - "5672:5672"   # Puerto para app Java
+      - "15672:15672" # Puerto para Web Admin
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - eco-network
+
+  # --- Databases (Postgres) ---
+  postgres-trip:
+    image: postgres:15
+    container_name: db-trip
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: trip_db
+    ports:
+      - "5438:5432" # <--- CAMBIO AQUÍ: Antes era 5432:5432
+    networks:
+      - eco-network
+
+  postgres-passenger:
+    image: postgres:15
+    container_name: db-passenger
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: passenger_db
+    ports:
+      - "5433:5432"
+    networks:
+      - eco-network
+
+  postgres-payment:
+    image: postgres:15
+    container_name: db-payment
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: payment_db
+    ports:
+      - "5434:5432"
+    networks:
+      - eco-network
+
+  postgres-notification:
+    image: postgres:15
+    container_name: db-notification
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: notification_db
+    ports:
+      - "5435:5432"
+    networks:
+      - eco-network
+
+  # --- Observabilidad ---
+  tempo:
+    image: grafana/tempo:latest
+    container_name: eco-tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+    networks:
+      - eco-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: eco-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - eco-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: eco-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+      - tempo
+    networks:
+      - eco-network
+
+networks:
+  eco-network:
+    driver: bridge

@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: trip-service # MISMO nombre del archivo en ../config-data/
+  config:
+    import: "optional:configserver:http://localhost:8888"
