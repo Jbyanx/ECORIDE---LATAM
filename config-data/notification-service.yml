@@ -1,0 +1,37 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:postgresql://localhost:5435/notification_db
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Configuración de RabbitMQ (Consumidor)
+  cloud:
+    function:
+      definition: reservationNotification;paymentNotification # Dos funciones separadas por ;
+    stream:
+      bindings:
+        reservationNotification-in-0:
+          destination: ecoride-reservations
+          group: notification-group
+        paymentNotification-in-0:
+          destination: ecoride-payment-results
+          group: notification-group
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true

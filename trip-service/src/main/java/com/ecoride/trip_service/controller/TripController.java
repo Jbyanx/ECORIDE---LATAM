@@ -39,14 +39,17 @@ public class TripController {
 
     // --- ENDPOINT DE PRUEBA PARA LA SAGA ---
     @PostMapping("/{tripId}/reserve")
-    public String reserveSeat(@PathVariable Long tripId, @RequestHeader(value = "X-User-Id", defaultValue = "test-passenger") String passengerId) {
+    public String reserveSeat(@PathVariable Long tripId, @RequestHeader(value = "X-User-Id", defaultValue = "test-passenger") String passengerId,
+                              @RequestParam(required = false) java.math.BigDecimal amount) {
 
+        //si no se envia monto se usa este
+        BigDecimal finalAmount = (amount != null) ? amount : new BigDecimal("15000.00");
         // 1. Simulamos datos de la reserva
         ReservationEvent event = new ReservationEvent();
         event.setReservationId(System.currentTimeMillis()); // ID aleatorio por ahora
         event.setTripId(tripId);
         event.setPassengerId(passengerId);
-        event.setAmount(new BigDecimal("15000.00"));
+        event.setAmount(amount);
         event.setStatus("PENDING");
 
         log.info("📤 Enviando evento de reserva para el viaje: {}", tripId);

@@ -24,20 +24,27 @@ public class ReservationConsumer {
         return event -> {
             log.info("💳 Procesando pago para Reserva ID: {}", event.getReservationId());
 
-            // 1. Simular lógica de negocio (Aquí se guarda el PaymentIntent en BD)
-            boolean paymentSuccess = true; // Simulamos éxito (Happy Path)
+            // --- SIMULACIÓN DE LÓGICA DE NEGOCIO ---
+            // Si el monto es mayor a 50,000, simulamos que el banco rechaza la tarjeta.
+            boolean paymentSuccess;
+            if (event.getAmount().compareTo(new java.math.BigDecimal("50000")) > 0) {
+                log.warn("⚠️ Monto demasiado alto (${}). Rechazando pago...", event.getAmount());
+                paymentSuccess = false;
+            } else {
+                log.info("✅ Monto aceptable. Aprobando pago...");
+                paymentSuccess = true;
+            }
+            // ---------------------------------------
 
             String status = paymentSuccess ? "AUTHORIZED" : "FAILED";
             String paymentId = UUID.randomUUID().toString();
 
-            // 2. Crear evento de respuesta
             PaymentResultEvent result = new PaymentResultEvent(
                     event.getReservationId(),
                     paymentId,
                     status
             );
 
-            // 3. Enviar respuesta a RabbitMQ
             log.info("📤 Enviando resultado de pago: {}", status);
             streamBridge.send("payment-out-0", result);
         };
