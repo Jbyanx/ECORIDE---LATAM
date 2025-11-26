@@ -42,10 +42,15 @@ spring:
           keycloak:
             provider: keycloak
             client-id: eco-gateway-client
-            client-secret: 7vnNk5eMcwt1AxUJfx52sVHFknf63Um1
+            client-secret: sOXxrbKXoQ0Zw8ID3aHAFvDPdMgFae7t
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
             scope: openid
+      # 2. NUEVA SECCIÓN: RESOURCE SERVER (Para validar Tokens de Postman/API)
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/ecoride
+          jwk-set-uri: http://localhost:8080/realms/ecoride/protocol/openid-connect/certs
 
 eureka:
   client:
