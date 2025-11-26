@@ -20,7 +20,6 @@ import java.util.List;
 public class TripController {
 
     private final TripService service;
-    private final StreamBridge streamBridge; // <--- Inyectamos el puente de mensajería
     private static final Logger log = LoggerFactory.getLogger(TripController.class);
 
     @PostMapping
@@ -37,27 +36,13 @@ public class TripController {
         return service.getAllTrips();
     }
 
-    // --- ENDPOINT DE PRUEBA PARA LA SAGA ---
-    @PostMapping("/{tripId}/reserve")
-    public String reserveSeat(@PathVariable Long tripId, @RequestHeader(value = "X-User-Id", defaultValue = "test-passenger") String passengerId,
-                              @RequestParam(required = false) java.math.BigDecimal amount) {
-
-        //si no se envia monto se usa este
-        BigDecimal finalAmount = (amount != null) ? amount : new BigDecimal("15000.00");
-        // 1. Simulamos datos de la reserva
-        ReservationEvent event = new ReservationEvent();
-        event.setReservationId(System.currentTimeMillis()); // ID aleatorio por ahora
-        event.setTripId(tripId);
-        event.setPassengerId(passengerId);
-        event.setAmount(amount);
-        event.setStatus("PENDING");
-
-        log.info("📤 Enviando evento de reserva para el viaje: {}", tripId);
-
-        // 2. ¡DISPARO! Enviamos el mensaje al canal definido en el YAML
-        // "reservation-out-0" debe coincidir con lo que pusimos en trip-service.yml
-        boolean sent = streamBridge.send("reservation-out-0", event);
-
-        return sent ? "¡Evento enviado a RabbitMQ! 🐰" : "Error al enviar evento ❌";
+    @PostMapping("/{tripId}/reservations") // Ajustamos la ruta según PDF
+    @ResponseStatus(HttpStatus.ACCEPTED) // 202 Accepted es ideal para procesos asíncronos
+    public void createReservation(
+            @PathVariable Long tripId,
+            @RequestHeader(value = "X-User-Id") String passengerId
+    ) {
+        service.createReservation(tripId, passengerId);
     }
+
 }

@@ -9,4 +9,6 @@ public interface TripService {
     TripResponse createTrip(CreateTripRequest request, String userId);
 
     List<TripResponse> getAllTrips();
+
+    void createReservation(Long tripId, String passengerId);
 }

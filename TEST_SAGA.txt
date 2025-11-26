@@ -1,0 +1,66 @@
+=============================================================================
+ GUÍA DE PRUEBAS DE SAGA (TRIP <-> PAYMENT)
+=============================================================================
+NOTA: Estos comandos asumen que TripService corre en el puerto 8081.
+      Si usas el Gateway (8090), recuerda agregar el Header Authorization.
+
+-----------------------------------------------------------------------------
+ESCENARIO 1: HAPPY PATH (Pago Exitoso)
+-----------------------------------------------------------------------------
+Objetivo: Crear un viaje "barato" ($15,000) y reservarlo.
+Resultado esperado:
+ - PaymentService: Aprueba (AUTHORIZED).
+ - TripService: Confirma la reserva (CONFIRMED).
+
+1. Crear el Viaje #1 (Precio: 15000)
+------------------------------------
+curl -X POST http://localhost:8081/trips \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: driver-juan" \
+  -d '{
+    "origin": "Centro",
+    "destination": "Sur",
+    "departureTime": "2025-12-01T08:00:00",
+    "seatsAvailable": 4,
+    "price": 15000.00
+  }'
+
+2. Reservar el Viaje #1 (Inicia la Saga)
+----------------------------------------
+# Asumimos que el ID del viaje creado fue "1"
+curl -X POST http://localhost:8081/trips/1/reservations \
+  -H "X-User-Id: pasajero-feliz"
+
+--> REVISAR LOGS: Debes ver "CONFIRMANDO Reserva".
+
+
+-----------------------------------------------------------------------------
+ESCENARIO 2: UNHAPPY PATH (Fallo de Pago y Compensación)
+-----------------------------------------------------------------------------
+Objetivo: Crear un viaje "caro" ($100,000) que supere el límite del banco.
+Resultado esperado:
+ - PaymentService: Rechaza (FAILED).
+ - TripService: Cancela la reserva (CANCELLED) y libera el asiento.
+
+3. Crear el Viaje #2 (Precio: 100000)
+-------------------------------------
+curl -X POST http://localhost:8081/trips \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: driver-rico" \
+  -d '{
+    "origin": "Aeropuerto",
+    "destination": "Hotel Lujo",
+    "departureTime": "2025-12-01T10:00:00",
+    "seatsAvailable": 2,
+    "price": 100000.00
+  }'
+
+4. Reservar el Viaje #2 (Inicia la Saga)
+----------------------------------------
+# Asumimos que el ID del viaje creado fue "2"
+curl -X POST http://localhost:8081/trips/2/reservations \
+  -H "X-User-Id: pasajero-sin-fondos"
+
+--> REVISAR LOGS: Debes ver "CANCELANDO Reserva".
+
+=============================================================================
