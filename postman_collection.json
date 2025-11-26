@@ -1,0 +1,179 @@
+{
+  "info": {
+    "_postman_id": "ecoride-latam-id",
+    "name": "ECO-RIDE LATAM",
+    "description": "Colección para probar el flujo de microservicios con OAuth2 y Keycloak.\n\nRoles:\n- driver1 / 1234 (ROLE_DRIVER)\n- passenger1 / 1234 (ROLE_PASSENGER)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Ver Perfil (Cualquier Rol)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{gateway_url}}/api/passengers/me",
+          "host": [
+            "{{gateway_url}}"
+          ],
+          "path": [
+            "api",
+            "passengers",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Crear Viaje (Solo Driver)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"origin\": \"Plaza Central\",\n  \"destination\": \"Aeropuerto Internacional\",\n  \"departureTime\": \"2025-12-01T08:00:00\",\n  \"seatsAvailable\": 4,\n  \"price\": 15000.00\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{gateway_url}}/api/trips",
+          "host": [
+            "{{gateway_url}}"
+          ],
+          "path": [
+            "api",
+            "trips"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Listar Viajes (Publico/Auth)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{gateway_url}}/api/trips",
+          "host": [
+            "{{gateway_url}}"
+          ],
+          "path": [
+            "api",
+            "trips"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Reservar - Happy Path (Solo Passenger)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{gateway_url}}/api/trips/1/reservations",
+          "host": [
+            "{{gateway_url}}"
+          ],
+          "path": [
+            "api",
+            "trips",
+            "1",
+            "reservations"
+          ]
+        },
+        "description": "Intenta reservar el viaje ID 1. Requiere login como passenger1."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Reservar - Fallo Pago (Solo Passenger)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{gateway_url}}/api/trips/2/reservations",
+          "host": [
+            "{{gateway_url}}"
+          ],
+          "path": [
+            "api",
+            "trips",
+            "2",
+            "reservations"
+          ]
+        },
+        "description": "Reserva el viaje ID 2 (Asumiendo que es el caro > 50k) para probar la compensación."
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "accessTokenUrl",
+        "value": "http://localhost:8080/realms/ecoride/protocol/openid-connect/token",
+        "type": "string"
+      },
+      {
+        "key": "authUrl",
+        "value": "http://localhost:8080/realms/ecoride/protocol/openid-connect/auth",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "eco-gateway-client",
+        "type": "string"
+      },
+      {
+        "key": "clientSecret",
+        "value": "{{client_secret}}",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "openid profile",
+        "type": "string"
+      },
+      {
+        "key": "grant_type",
+        "value": "authorization_code",
+        "type": "string"
+      },
+      {
+        "key": "callbackUrl",
+        "value": "https://oauth.pstmn.io/v1/callback",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      },
+      {
+        "key": "client_authentication",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [],
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8090",
+      "type": "string"
+    },
+    {
+      "key": "client_secret",
+      "value": "PON_AQUI_TU_CLIENT_SECRET",
+      "type": "string"
+    }
+  ]
+}
