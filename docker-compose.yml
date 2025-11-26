@@ -1,18 +1,38 @@
 version: '3.8'
 
 services:
-  # --- Identity (Keycloak) ---
+  # --- Identity (Keycloak con Postgres) ---
   keycloak:
     image: quay.io/keycloak/keycloak:22.0.1
     container_name: eco-keycloak
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      # Configuración para usar Postgres en lugar de H2
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db-keycloak:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
     command: start-dev
     ports:
       - "8080:8080"
-    # volumes:
-    #   - ./keycloak-data:/opt/keycloak/data/h2
+    depends_on:
+      - postgres-keycloak
+    networks:
+      - eco-network
+
+  # Nueva base de datos dedicada para Keycloak
+  postgres-keycloak:
+    image: postgres:15
+    container_name: db-keycloak
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: keycloak
+    ports:
+      - "5439:5432" # Puerto externo 5439 para no chocar con los otros
+    volumes:
+      - postgres_keycloak_data:/var/lib/postgresql/data # Persistencia de Docker
     networks:
       - eco-network
 
@@ -21,8 +41,8 @@ services:
     image: rabbitmq:3.12-management
     container_name: eco-rabbitmq
     ports:
-      - "5672:5672"   # Puerto para app Java
-      - "15672:15672" # Puerto para Web Admin
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -38,7 +58,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: trip_db
     ports:
-      - "5438:5432" # <--- CAMBIO AQUÍ: Antes era 5432:5432
+      - "5438:5432"
     networks:
       - eco-network
 
@@ -123,3 +143,7 @@ services:
 networks:
   eco-network:
     driver: bridge
+
+volumes:
+  postgres_keycloak_data:
+    driver: local
