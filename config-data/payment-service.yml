@@ -1,5 +1,5 @@
 server:
-  port: 8083 # Puerto para Payment Service
+  port: 8083
 
 spring:
   application:
@@ -15,6 +15,21 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Configuración de RabbitMQ (Consumidor)
+  cloud:
+    function:
+      definition: processReservation # Debe coincidir con el nombre del @Bean en Java
+    stream:
+      bindings:
+        # Canal de entrada (input del consumidor processReservation)
+        processReservation-in-0:
+          destination: ecoride-reservations # ¡Mismo Exchange que TripService!
+          group: payment-group # Cola persistente para asegurar entrega
+          content-type: application/json
+        # SALIDA (Para enviar resultados)
+        payment-out-0:
+          destination: ecoride-payment-results # otro Exchange en Rabbit
 
 eureka:
   client:
